@@ -20,25 +20,27 @@ jobs:
 
       - name: Create video with AI voice
         run: |
-
-          # Save script from API payload
+          # Save script
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Download Piper TTS
+          # Download Piper
           wget https://github.com/rhasspy/piper/releases/latest/download/piper_linux_x86_64.tar.gz
           tar -xzf piper_linux_x86_64.tar.gz
 
-          # Download English voice model (FIXED URL)
-          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
-          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
+          # Make binary executable
+          chmod +x piper
 
-          # Generate AI voice
-          ./piper/piper \
-            --model en_US-lessac-medium.onnx \
+          # Download voice model (CORRECT PATH)
+          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx -O model.onnx
+          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json -O model.onnx.json
+
+          # Generate voice
+          ./piper \
+            --model model.onnx \
             --output_file voice.wav \
             script.txt
 
-          # Create vertical video + merge voice
+          # Create vertical video + merge audio
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
             -i voice.wav \
             -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
