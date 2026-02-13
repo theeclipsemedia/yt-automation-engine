@@ -16,13 +16,33 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt update && sudo apt install -y ffmpeg
 
-      - name: Create video from text
+      - name: Create video with AI voice
         run: |
-          echo "${{ github.event.client_payload.script }}" > script.txt
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=10 \
-          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2" \
-          -c:v libx264 -t 10 -pix_fmt yuv420p output.mp4
+    echo "${{ github.event.client_payload.script }}" > script.txt
 
+    # Install dependencies
+    sudo apt update
+    sudo apt install -y ffmpeg wget unzip
+
+    # Download Piper TTS
+    wget https://github.com/rhasspy/piper/releases/latest/download/piper_linux_x86_64.tar.gz
+    tar -xzf piper_linux_x86_64.tar.gz
+
+    # Download English voice model
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US-lessac-medium.onnx
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US-lessac-medium.onnx.json
+
+    # Generate AI voice
+    ./piper/piper \
+      --model en_US-lessac-medium.onnx \
+      --output_file voice.wav \
+      script.txt
+
+    # Create vertical video + merge AI voice
+    ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
+      -i voice.wav \
+      -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
+      -c:v libx264 -c:a aac -shortest output.mp4
       - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
         with:
