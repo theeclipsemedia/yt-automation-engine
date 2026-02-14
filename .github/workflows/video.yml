@@ -1,7 +1,6 @@
 name: Build Video
 
 on:
-  workflow_dispatch:
   repository_dispatch:
     types: [generate_video]
 
@@ -11,28 +10,31 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ffmpeg python3-pip
-          pip3 install edge-tts
+          sudo apt install -y ffmpeg
+          pip install edge-tts
 
       - name: Generate AI Voice + Video
         run: |
+          # Save script from webhook
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Generate Deep Male Neural Voice
+          # Generate male natural voice
           edge-tts \
-            --voice en-US-DavisNeural \
+            --voice "en-US-GuyNeural" \
+            --rate="+0%" \
+            --pitch="+0Hz" \
             --text "$(cat script.txt)" \
             --write-media voice.mp3
 
-          # Create Vertical 9:16 Video with Audio
+          # Create vertical video and merge audio
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
             -i voice.mp3 \
-            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2" \
+            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video Artifact
