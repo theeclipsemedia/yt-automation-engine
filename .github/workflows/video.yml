@@ -26,12 +26,12 @@ jobs:
       - name: Generate Smooth Deep Voice
         run: |
           edge-tts \
-            --voice en-US-GuyNeural \
-            --rate="-12%" \
-            --pitch="-8Hz" \
-            --volume="+0%" \
-            --write-media voice.mp3 \
-            --file script.txt
+          --voice en-US-ChristopherNeural \
+          --rate "-10%" \
+          --pitch "-6Hz" \
+          --volume "+5%" \
+          --write-media voice.mp3 \
+          --file script.txt
 
       - name: Create Vertical Video + Center Transparent Branding
         run: |
