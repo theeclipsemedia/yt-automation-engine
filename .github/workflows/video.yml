@@ -16,23 +16,23 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
-          pip install edge-tts requests
+          pip install edge-tts
 
-      - name: Generate Dark Psychology Video
+      - name: Generate AI Voice + Video
         run: |
           # Save script
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Generate voice (STRONG MALE VOICE)
+          # Generate voice (STRONG MALE)
           edge-tts \
             --voice en-US-GuyNeural \
             --rate=+5% \
             --pitch=-5Hz \
-            --file voice.mp3 \
+            --write-media voice.mp3 \
             --text "$(cat script.txt)"
 
           # Create vertical video + watermark
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=20 \
             -i voice.mp3 \
             -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.15:fontsize=50:x=w-tw-40:y=h-th-40" \
             -c:v libx264 -c:a aac -shortest output.mp4
