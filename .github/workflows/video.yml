@@ -23,13 +23,13 @@ jobs:
           echo "${{ github.event.client_payload.script }}" > script.txt
           cat script.txt
 
-      - name: Generate Ultra Deep Slow Voice
+      - name: Generate Smooth Deep Voice
         run: |
           edge-tts \
-            --voice en-US-ChristopherNeural \
-            --rate="-25%" \
-            --pitch="-35Hz" \
-            --volume="+5%" \
+            --voice en-US-GuyNeural \
+            --rate="-15%" \
+            --pitch="-10Hz" \
+            --volume="+0%" \
             --write-media voice.mp3 \
             --file script.txt
 
