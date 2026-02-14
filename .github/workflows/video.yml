@@ -16,31 +16,24 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y ffmpeg wget
+          sudo apt install -y ffmpeg python3 python3-pip
+          pip3 install gtts
 
-      - name: Generate Video With AI Voice
+      - name: Generate AI Voice + Video
         run: |
-          # Save script
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Download Piper
-          wget https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_linux_x86_64.tar.gz
-          tar -xzf piper_linux_x86_64.tar.gz
-          chmod +x piper/piper
+          # Generate voice using Google TTS
+          python3 - <<EOF
+          from gtts import gTTS
+          text = open("script.txt").read()
+          tts = gTTS(text=text, lang='en')
+          tts.save("voice.mp3")
+          EOF
 
-          # Download voice model (stable path)
-          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US-lessac-medium/en_US-lessac-medium.onnx
-          wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US-lessac-medium/en_US-lessac-medium.onnx.json
-
-          # Generate voice
-          ./piper/piper \
-            --model en_US-lessac-medium.onnx \
-            --output_file voice.wav \
-            script.txt
-
-          # Create vertical short with audio
+          # Create vertical video
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=10 \
-            -i voice.wav \
+            -i voice.mp3 \
             -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
