@@ -18,23 +18,21 @@ jobs:
           sudo apt install -y ffmpeg
           pip install edge-tts
 
-      - name: Generate AI Voice + Video
+      - name: Generate Dark Psychology Voice + Video
         run: |
-          # Save script from webhook
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Generate male natural voice
           edge-tts \
-            --voice "en-US-GuyNeural" \
-            --rate="+0%" \
-            --pitch="+0Hz" \
+            --voice "en-US-DavisNeural" \
+            --rate="-12%" \
+            --pitch="-6Hz" \
+            --volume="+5%" \
             --text "$(cat script.txt)" \
             --write-media voice.mp3
 
-          # Create vertical video and merge audio
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 \
             -i voice.mp3 \
-            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
+            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video Artifact
