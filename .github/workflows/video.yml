@@ -1,4 +1,4 @@
-name: Build Video
+name: Build Dark Psychology Video
 
 on:
   repository_dispatch:
@@ -16,23 +16,25 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
-          pip install edge-tts
+          pip install edge-tts requests
 
       - name: Generate Dark Psychology Video
         run: |
+          # Save script
           echo "${{ github.event.client_payload.script }}" > script.txt
 
+          # Generate voice (STRONG MALE VOICE)
           edge-tts \
-            --voice "en-US-DavisNeural" \
-            --rate="-12%" \
-            --pitch="-6Hz" \
-            --volume="+5%" \
-            --text "$(cat script.txt)" \
-            --write-media voice.mp3
+            --voice en-US-GuyNeural \
+            --rate=+5% \
+            --pitch=-5Hz \
+            --file voice.mp3 \
+            --text "$(cat script.txt)"
 
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 \
+          # Create vertical video + watermark
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
             -i voice.mp3 \
-            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='The Eclipse Media':fontcolor=white@0.12:fontsize=50:x=w-tw-40:y=h-th-40" \
+            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.15:fontsize=50:x=w-tw-40:y=h-th-40" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video Artifact
