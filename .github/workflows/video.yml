@@ -18,7 +18,7 @@ jobs:
           sudo apt install -y ffmpeg
           pip install edge-tts
 
-      - name: Generate Dark Psychology Voice + Video
+      - name: Generate Dark Psychology Video
         run: |
           echo "${{ github.event.client_payload.script }}" > script.txt
 
@@ -32,7 +32,7 @@ jobs:
 
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 \
             -i voice.mp3 \
-            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2" \
+            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='The Eclipse Media':fontcolor=white@0.12:fontsize=50:x=w-tw-40:y=h-th-40" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video Artifact
