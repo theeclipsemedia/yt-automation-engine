@@ -11,33 +11,31 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ffmpeg python3 python3-pip
-          pip3 install gtts
+          sudo apt install -y ffmpeg python3-pip
+          pip3 install edge-tts
 
       - name: Generate AI Voice + Video
         run: |
           echo "${{ github.event.client_payload.script }}" > script.txt
 
-          # Generate voice using Google TTS
-          python3 - <<EOF
-          from gtts import gTTS
-          text = open("script.txt").read()
-          tts = gTTS(text=text, lang='en')
-          tts.save("voice.mp3")
-          EOF
+          # Generate Deep Male Neural Voice
+          edge-tts \
+            --voice en-US-DavisNeural \
+            --text "$(cat script.txt)" \
+            --write-media voice.mp3
 
-          # Create vertical video
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=10 \
+          # Create Vertical 9:16 Video with Audio
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=15 \
             -i voice.mp3 \
-            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
+            -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=70:x=(w-text_w)/2:y=(h-text_h)/2" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
-      - name: Upload Video
+      - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
         with:
           name: generated-video
