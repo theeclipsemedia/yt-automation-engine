@@ -18,25 +18,26 @@ jobs:
           sudo apt install -y ffmpeg
           python3 -m pip install edge-tts
 
-      - name: Save Script Properly
+      - name: Save Script Cleanly
         run: |
-          printf "%s" "${{ github.event.client_payload.script }}" > script.txt
+          echo "${{ github.event.client_payload.script }}" > script.txt
           cat script.txt
 
-      - name: Generate Deep Voice
+      - name: Generate Ultra Deep Slow Voice
         run: |
           edge-tts \
-            --voice en-US-GuyNeural \
-            --rate="-15%" \
-            --pitch="-20Hz" \
+            --voice en-US-ChristopherNeural \
+            --rate="-25%" \
+            --pitch="-35Hz" \
+            --volume="+5%" \
             --write-media voice.mp3 \
             --file script.txt
 
-      - name: Create Vertical Video with Center Branding
+      - name: Create Vertical Video + Bottom Branding
         run: |
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 \
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=40 \
           -i voice.mp3 \
-          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.07:fontsize=130:x=(w-text_w)/2:y=(h-text_h)/2" \
+          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.08:fontsize=90:x=(w-text_w)/2:y=h-200" \
           -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video
