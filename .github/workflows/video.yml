@@ -23,22 +23,21 @@ jobs:
           printf "%s" "${{ github.event.client_payload.script }}" > script.txt
           cat script.txt
 
-      - name: Generate Smooth Deep Voice
+      - name: Generate Smooth Voice
         run: |
           edge-tts \
             --voice en-US-ChristopherNeural \
             --rate="-5%" \
-            --pitch="-8Hz" \
+            --pitch="-6Hz" \
             --volume="+0%" \
             --write-media voice.mp3 \
             --file script.txt
 
-      - name: Create Vertical Video with Bottom Branding
+      - name: Create Vertical Video + Bottom Watermark
         run: |
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=40 \
           -i voice.mp3 \
-          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,
-               drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.12:fontsize=28:x=(w-text_w)/2:y=h-70" \
+          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.15:fontsize=40:x=(w-text_w)/2:y=h-150" \
           -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video
