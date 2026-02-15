@@ -32,70 +32,17 @@ jobs:
             --write-media voice.mp3 \
             --file script.txt
 
-      - name: Generate ASS Subtitles (Word Highlight)
+      - name: Generate Subtitles File
         run: |
-          python3 << 'EOF'
-import subprocess
+          echo "1" > subs.srt
+          echo "00:00:00,000 --> 00:00:59,000" >> subs.srt
+          cat script.txt >> subs.srt
 
-with open("script.txt", "r", encoding="utf-8") as f:
-    text = f.read().strip()
-
-result = subprocess.run(
-    ["ffprobe", "-v", "error", "-show_entries",
-     "format=duration", "-of",
-     "default=noprint_wrappers=1:nokey=1", "voice.mp3"],
-    stdout=subprocess.PIPE,
-    text=True
-)
-duration = float(result.stdout.strip())
-
-words = text.split()
-total_chars = sum(len(w) for w in words)
-
-ass = """[Script Info]
-ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Georgia,72,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,0,0,1,2,0,5,100,100,960,1
-
-[Events]
-Format: Layer, Start, End, Style, Text
-"""
-
-current_time = 0
-highlight_color = r"\c&H00C8A200&"
-
-def format_time(t):
-    h = int(t // 3600)
-    m = int((t % 3600) // 60)
-    s = int(t % 60)
-    cs = int((t - int(t)) * 100)
-    return f"{h}:{m:02}:{s:02}.{cs:02}"
-
-for word in words:
-    weight = len(word) / total_chars
-    word_duration = duration * weight
-
-    start_time = format_time(current_time)
-    end_time = format_time(current_time + word_duration)
-    current_time += word_duration
-
-    highlighted = f"{highlight_color}{word}{{\\c&H00FFFFFF&}}"
-
-    ass += f"Dialogue: 0,{start_time},{end_time},Default,{highlighted}\n"
-
-with open("subs.ass", "w", encoding="utf-8") as f:
-    f.write(ass)
-EOF
-
-      - name: Render Cinematic Video
+      - name: Render Vertical Video
         run: |
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=60 \
           -i voice.mp3 \
-          -vf "ass=subs.ass" \
+          -vf "subtitles=subs.srt:force_style='Fontsize=60,Alignment=2'" \
           -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Output
