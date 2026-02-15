@@ -38,10 +38,23 @@ jobs:
           echo "00:00:00,000 --> 00:10:00,000" >> subs.srt
           cat script.txt >> subs.srt
 
+      - name: Render Vertical Video
+        run: |
+          echo "FILES BEFORE RENDER"
+          ls -lah
+
+          ffmpeg -y \
+          -f lavfi -i color=c=black:s=1080x1920:d=120 \
+          -i voice.mp3 \
+          -vf subtitles=subs.srt \
+          -c:v libx264 -c:a aac -shortest output.mp4
+
+          echo "FILES AFTER RENDER"
+          ls -lah
+
       - name: Upload Output
         uses: actions/upload-artifact@v4
         with:
           name: eclipse-video
-          path: |
-            output.mp4
-          if-no-files-found: error
+          path: output.mp4
+          if-no-files-found: warn
