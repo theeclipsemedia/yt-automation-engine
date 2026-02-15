@@ -23,21 +23,21 @@ jobs:
           printf "%s" "${{ github.event.client_payload.script }}" > script.txt
           cat script.txt
 
-      - name: Generate Smooth Voice
+      - name: Generate Deep Voice + Subtitles
         run: |
           edge-tts \
             --voice en-US-ChristopherNeural \
             --rate="-5%" \
             --pitch="-6Hz" \
-            --volume="+0%" \
             --write-media voice.mp3 \
+            --write-subtitles subs.srt \
             --file script.txt
 
-      - name: Create Vertical Video + Bottom Watermark
+      - name: Create Vertical Video With Subtitles + Watermark
         run: |
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=40 \
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=60 \
           -i voice.mp3 \
-          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2,drawtext=text='THE ECLIPSE MEDIA':fontcolor=white@0.15:fontsize=40:x=(w-text_w)/2:y=h-150" \
+          -vf "subtitles=subs.srt:force_style='Fontsize=60,PrimaryColour=&Hffffff&,Alignment=2,MarginV=120'" \
           -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Video
