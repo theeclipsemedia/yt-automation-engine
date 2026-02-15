@@ -20,29 +20,30 @@ jobs:
 
       - name: Save Script
         run: |
-          echo "${{ github.event.client_payload.script }}" > script.txt
+          printf "%s" "${{ github.event.client_payload.script }}" > script.txt
 
       - name: Generate Deep Fast Voice
         run: |
           edge-tts \
             --voice en-US-ChristopherNeural \
-            --rate="+18%" \
-            --pitch="-16Hz" \
+            --rate="+20%" \
+            --pitch="-18Hz" \
             --volume="+0%" \
             --write-media voice.mp3 \
             --file script.txt
 
-      - name: Create Simple Synced Subtitle
+      - name: Create Subtitles File
         run: |
           echo "1" > subs.srt
           echo "00:00:00,000 --> 00:10:00,000" >> subs.srt
           cat script.txt >> subs.srt
 
-      - name: Render Vertical Video (Centered, No Crop)
+      - name: Render Final Vertical Video (Guaranteed Burn)
         run: |
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=120 \
+          ffmpeg \
+            -f lavfi -i color=c=black:s=1080x1920:d=120 \
             -i voice.mp3 \
-            -vf "subtitles=subs.srt:force_style='Fontsize=54,Alignment=2,MarginV=300'" \
+            -filter_complex "[0:v][1:a]overlay,subtitles=subs.srt:force_style='Fontsize=60,Alignment=2,MarginV=250'" \
             -c:v libx264 -c:a aac -shortest output.mp4
 
       - name: Upload Output
