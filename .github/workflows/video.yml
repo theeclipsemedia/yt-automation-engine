@@ -18,33 +18,87 @@ jobs:
           sudo apt install -y ffmpeg
           python3 -m pip install edge-tts
 
-      # 🔹 Save script from Pipedream payload
-      - name: Save Script Properly
+      - name: Save Script
         run: |
           echo "${{ github.event.client_payload.script }}" > script.txt
-          cat script.txt
 
-      # 🔹 Generate Deep Male Voice (Balanced Deep)
-      - name: Generate Smooth Deep Voice
+      - name: Generate Deep Cinematic Voice
         run: |
           edge-tts \
             --voice en-US-ChristopherNeural \
-            --rate="-4%" \
-            --pitch="-8Hz" \
+            --rate="-8%" \
+            --pitch="-12Hz" \
             --volume="+0%" \
             --write-media voice.mp3 \
             --file script.txt
 
-      # 🔹 Create Vertical 1080x1920 Video with Center Text
-      - name: Create Vertical Video
+      - name: Generate ASS Subtitles (Word Highlight)
+        run: |
+          python3 << 'EOF'
+import subprocess
+
+with open("script.txt", "r", encoding="utf-8") as f:
+    text = f.read().strip()
+
+result = subprocess.run(
+    ["ffprobe", "-v", "error", "-show_entries",
+     "format=duration", "-of",
+     "default=noprint_wrappers=1:nokey=1", "voice.mp3"],
+    stdout=subprocess.PIPE,
+    text=True
+)
+duration = float(result.stdout.strip())
+
+words = text.split()
+total_chars = sum(len(w) for w in words)
+
+ass = """[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Georgia,72,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,0,0,1,2,0,5,100,100,960,1
+
+[Events]
+Format: Layer, Start, End, Style, Text
+"""
+
+current_time = 0
+highlight_color = r"\c&H00C8A200&"
+
+def format_time(t):
+    h = int(t // 3600)
+    m = int((t % 3600) // 60)
+    s = int(t % 60)
+    cs = int((t - int(t)) * 100)
+    return f"{h}:{m:02}:{s:02}.{cs:02}"
+
+for word in words:
+    weight = len(word) / total_chars
+    word_duration = duration * weight
+
+    start_time = format_time(current_time)
+    end_time = format_time(current_time + word_duration)
+    current_time += word_duration
+
+    highlighted = f"{highlight_color}{word}{{\\c&H00FFFFFF&}}"
+
+    ass += f"Dialogue: 0,{start_time},{end_time},Default,{highlighted}\n"
+
+with open("subs.ass", "w", encoding="utf-8") as f:
+    f.write(ass)
+EOF
+
+      - name: Render Cinematic Video
         run: |
           ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=60 \
           -i voice.mp3 \
-          -vf "drawtext=textfile=script.txt:fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2" \
+          -vf "ass=subs.ass" \
           -c:v libx264 -c:a aac -shortest output.mp4
 
-      # 🔹 Upload artifact (for download)
-      - name: Upload Video
+      - name: Upload Output
         uses: actions/upload-artifact@v4
         with:
           name: eclipse-video
